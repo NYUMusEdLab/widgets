@@ -1,0 +1,66 @@
+svg {
+    border: solid 1px black;
+}
+
+/* Scale Ring */
+.outline {
+    fill: none;
+    stroke: black;
+    stroke-width: 2;
+}
+
+.label {
+    cursor: default;
+    font-size: 40px;
+    text-align: center;
+    line-height: 60px;
+}
+
+.label.double {
+    font-size: 20px;
+    line-height: 25px;
+}
+
+.segment path {
+    fill: transparent;
+}
+
+.segment.disabled path {
+    fill: #ccc;
+}
+
+.segment.disabled .note-label {
+    color: #fff;
+}
+
+.clickable .segment:hover path {
+    fill: dodgerblue;
+}
+
+.segment.active path {
+    fill: tomato;
+}
+
+/* Piano Roll */
+
+.piano-track.odd {
+    fill: #fff;
+}
+
+.piano-track.even {
+    fill: #eee;
+}
+
+.measure-marker {
+    stroke-width: 4;
+    stroke: black;
+}
+
+.beat-marker {
+    stroke: #aaa;
+    stroke-width: 2;
+}
+
+.active {
+    fill: dodgerblue;
+}

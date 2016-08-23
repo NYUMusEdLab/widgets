@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Circle of Fifths</title>
+    <meta charset="utf-8"/>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    
+    <script src="js/vendor/Tone.min.js"></script>
+    <script src="js/vendor/MidiConvert.js"></script>
+    
+    <script src="js/SVG.js"></script>
+    <script src="js/ScaleRing.js"></script>
+    
+    <script>
+        window.addEventListener('load', function() {
+            // Construct two rings
+            var scale = ['D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B', 'C', 'C#/Db'];
+            var highlights = [true, false, false, true, false, true, true, true, false, false, true, false];
+            
+            var container = document.getElementById('container');
+            
+            var circle1 = new ScaleRing(container, 180);
+            circle1.setNotes(scale);
+            circle1.setHighlighting(highlights);
+            circle1.setPosition(250, 250);
+            
+            var circle2 = new ScaleRing(container, 180);
+            circle2.setNotes(scale);
+            circle2.setHighlighting(highlights);
+            circle2.setDisplayOrder(ScaleRing.CIRCLE_OF_5THS);
+            circle2.setPosition(750, 250);
+            
+            // Now, set up the synth and load the MIDI file
+            var synth = new Tone.PolySynth(8).toMaster();
+
+            MidiConvert.load("assets/ComeTogether.mid", function(midi){
+                Tone.Transport.set(midi.transport);
+                Tone.Transport.loopEnd = '4m';
+                Tone.Transport.loop = true;
+
+                //pass in the note events from one of the tracks as the second argument to Tone.Part
+                var midiPart = new Tone.Part(function(time, event){
+
+                    //use the events to play the synth
+                    synth.triggerAttackRelease(event.note, event.duration, time, event.velocity);
+                    
+                    //TODO: This is not a great way to sync the timing, but it's okay for now
+                    circle1.setActiveNote((event.midi - 38) % 12, true);
+                    circle2.setActiveNote((event.midi - 38) % 12, true);
+                    setTimeout(function() {
+                        circle1.setActiveNote((event.midi - 38) % 12, false);
+                        circle2.setActiveNote((event.midi - 38) % 12, false);
+                    }, event.duration * 1000);
+                    
+
+                }, midi.tracks[1].notes).start();
+            });
+            
+            document.getElementById('playButton').addEventListener('click', function() {
+                if(Tone.Transport.state == 'started') {
+                    Tone.Transport.position = "0:0:0";
+                    Tone.Transport.stop();
+                    document.getElementById('playButton').textContent = 'Play';
+                } else {
+                    Tone.Transport.start();
+                    document.getElementById('playButton').textContent = 'Stop';
+                }
+            });
+            
+        });
+    </script>
+</head>
+<body>
+    <svg id="container" width="1000" height="500" viewbox="0 0 1000 500"></svg>
+    <button id="playButton">Play</button>
+</body>
+</html>

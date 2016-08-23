@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Circle of Fifths</title>
+    <meta charset="utf-8"/>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    
+    <script src="js/vendor/Tone.min.js"></script>
+    <script src="js/vendor/MidiConvert.js"></script>
+    
+    <script src="js/SVG.js"></script>
+    <script src="js/PianoRoll.js"></script>
+    
+    <script>
+        var currNoteIndex = 0;
+        
+        window.addEventListener('load', function() {
+            // Construct two rings
+            var scale = ['D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B', 'C', 'C#/Db'];
+            var highlights = [true, false, false, true, false, true, true, true, false, false, true, false];
+            
+            var container = document.getElementById('container');
+            
+            var pianoRoll = new PianoRoll(container, 1000, 200);
+            pianoRoll.setRange(37, 54);
+            pianoRoll.setDuration(4);
+            
+            // Now, set up the synth and load the MIDI file
+            var synth = new Tone.PolySynth(8).toMaster();
+            
+            MidiConvert.load("assets/ComeTogether.mid", function(midi){
+                pianoRoll.setNotes(midi.tracks[1]);
+                
+                Tone.Transport.set(midi.transport);
+                Tone.Transport.loopEnd = '4m';
+                Tone.Transport.loop = true;
+            
+                //pass in the note events from one of the tracks as the second argument to Tone.Part
+                var midiPart = new Tone.Part(function(time, event){
+            
+                    //use the events to play the synth
+                    synth.triggerAttackRelease(event.note, event.duration, time, event.velocity);
+
+                    // //TODO: This is not a great way to sync the timing, but it's okay for now
+                    var thisNote = currNoteIndex;
+                    
+                    pianoRoll.setActiveNote(thisNote, true);
+                    setTimeout(function() {
+                        pianoRoll.setActiveNote(thisNote, false);
+                    }, event.duration * 1000);
+                    currNoteIndex += 1;
+                    currNoteIndex %= midi.tracks[1].notes.length;
+            
+                }, midi.tracks[1].notes).start();
+            });
+            
+            document.getElementById('playButton').addEventListener('click', function() {
+                if(Tone.Transport.state == 'started') {
+                    currNoteIndex = 0;
+                    Tone.Transport.position = "0:0:0";
+                    Tone.Transport.stop();
+                    document.getElementById('playButton').textContent = 'Play';
+                } else {
+                    Tone.Transport.start();
+                    document.getElementById('playButton').textContent = 'Stop';
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <svg id="container" width="1000" height="200" viewbox="0 0 1000 200"></svg>
+    <button id="playButton">Play</button>
+</body>
+</html>
